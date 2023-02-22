@@ -1,25 +1,10 @@
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.jar.JarEntry;
 
 public class SequenceGenerator {
-    public static ArrayList<Integer> fibonacci(int top){
-        int i = 0;
-        ArrayList<Integer> allFib = new ArrayList<>();
-        allFib.add(0);
-        allFib.add(1);
-        while(allFib.get(allFib.size()-1) < top){
-            allFib.add(allFib.get(allFib.size()-1) + allFib.get(allFib.size()-2));
-        }
-        return allFib;
-    }
-
-    public static ArrayList<Integer> fibonacci(int top, int prune){
-        ArrayList<Integer> fib = SequenceGenerator.fibonacci(top);
-        fib = (ArrayList<Integer>) new ArrayList<Integer>(fib.subList(prune, fib.size()));
-        return fib;
-    }
 
     public static HashMap<Integer, Integer> strictSequenceToPairs(ArrayList<Integer> sequence){
         HashMap<Integer, Integer> pairs = new HashMap<>();
@@ -30,7 +15,7 @@ public class SequenceGenerator {
     }
 
     public static HashMap<Integer, Integer> collatzNumStepsUpOrDown(int top, int first, boolean isStepsUp){
-        HashMap<Integer, Integer> collatzStepsInDir = new HashMap();
+        HashMap<Integer, Integer> collatzStepsInDir = new HashMap<>();
         for(int a = first; a <= top; a++){
             int currVal = a;
             int numStepsInDir = 0;
@@ -54,31 +39,64 @@ public class SequenceGenerator {
         return collatzStepsInDir;
     }
 
-    public static HashMap<Integer, Integer> reverseCollatzStepsUp(int top, int start, int freeDownSteps){
-        HashMap<Integer, HashSet<Integer>> collatzStepsInDir = new HashMap();
-        HashSet setAtZeroSteps = new HashSet();
-        setAtZeroSteps.add(1);
-        collatzStepsInDir.put(0, setAtZeroSteps);
-        for(int a=1; a<=top; a++){
-            //hmmm im not calculating this properly
-            for(int lastStepInts : collatzStepsInDir.get(a-1)){
-                //do the down steps
-                HashSet<Integer> setAtPreviousStep = new HashSet<>();
-                HashSet<Integer> setAtCurrentStep = new HashSet<>();
-                if(a % 6 == 4){
-
+    public static void doCollatsDuos(){
+        int aMax = 10;
+        int bMax = 10;
+        int n = 10000;
+        int maxStepsWithoutHittingVisited = n*10000;
+        for(int a=1; a<aMax; a++){
+            System.out.println("a is " + a);
+            for(int b=1; b<bMax; b++){
+                CollatzResult cr = doCollatzWithDiffNumsUpToN(a, b, n, maxStepsWithoutHittingVisited);
+                if(cr.equals(CollatzResult.goesToOne)){
+                    System.out.println(a + "\t" + b);
                 }
-                //do up step
-
             }
         }
     }
+
+    public static CollatzResult doCollatzWithDiffNumsUpToN(int a, int b, int n, int maxStepsWithoutHittingVisited){
+        HashSet<BigInteger> numsThatGoToOne = new HashSet<>();
+        BigInteger bigA = BigInteger.valueOf(a);
+        BigInteger bigB = BigInteger.valueOf(b);
+        BigInteger big0 = BigInteger.ZERO;
+        BigInteger big1 = BigInteger.ONE;
+        int numSteps = 0;
+        for(int i=1; i<n; i++){
+            HashSet<BigInteger> numsVisitedCurrIVal = new HashSet<>();
+            BigInteger curr = BigInteger.valueOf(i);
+            while(!curr.equals(big1)){
+                if(numsVisitedCurrIVal.size()<5000) {
+                    numsVisitedCurrIVal.add(curr);
+                }
+                if(numSteps >= maxStepsWithoutHittingVisited){
+                    return CollatzResult.divergesOrLoopTooLong;
+                }
+                if(curr.mod(bigA).equals(big0)){
+                    curr = curr.divide(bigA);
+                }
+                else{
+                    curr = curr.multiply(bigB).add(big1);//hardcoded
+                }
+                numSteps++;
+            }
+            if(numsThatGoToOne.size()<1000000) {
+                numsThatGoToOne.addAll(numsVisitedCurrIVal);
+            }
+        }
+        return CollatzResult.goesToOne;
+
+
+    }
+
+
 
     public static void main(String[] args){
         //ArrayList<Integer> fib = fibonacci(100, 5);
         //strictSequenceToPairs(fib);
 
-        collatzNumStepsUpOrDown(1025,975, false);
+        //collatzNumStepsUpOrDown(1025,975, false);
+        doCollatsDuos();
     }
 
 
