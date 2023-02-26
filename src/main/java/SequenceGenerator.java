@@ -6,61 +6,46 @@ import java.util.jar.JarEntry;
 
 public class SequenceGenerator {
 
-    public static HashMap<Integer, Integer> strictSequenceToPairs(ArrayList<Integer> sequence){
-        HashMap<Integer, Integer> pairs = new HashMap<>();
-        for(int i=0; i<sequence.size()-1; i++){
-            pairs.put(sequence.get(i), sequence.get(i+1));
-        }
-        return pairs;
-    }
-
-    public static HashMap<Integer, Integer> collatzNumStepsUpOrDown(int top, int first, boolean isStepsUp){
-        HashMap<Integer, Integer> collatzStepsInDir = new HashMap<>();
-        for(int a = first; a <= top; a++){
-            int currVal = a;
-            int numStepsInDir = 0;
-            while(currVal != 1){
-                if(currVal % 2 == 0){
-                    if(!isStepsUp){
-                        numStepsInDir++;
-                    }
-                    currVal = currVal / 2;
-                }
-                else{
-                    if(isStepsUp) {
-                        numStepsInDir++;
-                    }
-                    currVal = 3 * currVal + 1;
-                }
-            }
-            collatzStepsInDir.put(a, numStepsInDir);
-        }
-        System.out.println(collatzStepsInDir);
-        return collatzStepsInDir;
-    }
-
-    public static void doCollatsDuos(){
-        int aMax = 10;
-        int multMax = 10;
-        int plusMax = 10;
-        int n = 1000;
-        int maxStepsWithoutHittingVisited = n*100;
+    public static void doCollatsTuplesMultipleThreads(int multMax, int plusMax) throws InterruptedException {
         ArrayList<Integer> divMods = new ArrayList<>();
+        divMods.add(3);
         divMods.add(2);
-        for(int a=1; a<aMax; a++){
-            System.out.println("a is " + a);
-            for(int mult=1; mult<multMax; mult++){
-                System.out.println("mult is " + mult);
-                for(int plus=1; plus<plusMax; plus++) {
-                    System.out.println("plus is " + plus);
+        for (int mult = 1; mult < multMax; mult++) {
+            System.out.println("mult is " + mult);
+            for (int plus = 1; plus <= plusMax; plus += 3) {
+                System.out.println("plus is " + plus);
 
-                    CollatzResult cr = doCollatzWithDiffNumsUpToN(divMods, mult, plus, n, maxStepsWithoutHittingVisited);
-                    if (cr.equals(CollatzResult.goesToOne)) {
-                        System.out.println(a + "\t" + mult);
-                    }
-                }
+                Runnable r0 = new CollatzRunnerThread(divMods, mult, plus+0);
+                Runnable r1 = new CollatzRunnerThread(divMods, mult, plus+1);
+                Runnable r2 = new CollatzRunnerThread(divMods, mult, plus+2);
+
+                Thread t0 = new Thread(r0);
+                Thread t1 = new Thread(r1);
+                Thread t2 = new Thread(r2);
+
+                t0.start();
+                t1.start();
+                t2.start();
+
+                t0.join();
+                t1.join();
+                t2.join();
             }
         }
+
+    }
+
+    public static void doCollatsSpecificTuple(ArrayList<Integer> divMods, int mult, int plus){
+        int n = 10000;
+        int maxStepsWithoutHittingVisited = n*1000;
+
+        CollatzResult cr = doCollatzWithDiffNumsUpToN(divMods, mult, plus, n, maxStepsWithoutHittingVisited);
+        if (cr.equals(CollatzResult.goesToOne)) {
+            System.out.println(divMods + "\t" + mult + "\t" + plus);
+        }
+
+
+
     }
 
     public static ArrayList<BigInteger> getBigIntegerList(ArrayList<Integer> numbers){
@@ -109,12 +94,12 @@ public class SequenceGenerator {
         return CollatzResult.goesToOne;
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws InterruptedException {
         //ArrayList<Integer> fib = fibonacci(100, 5);
         //strictSequenceToPairs(fib);
 
         //collatzNumStepsUpOrDown(1025,975, false);
-        doCollatsDuos();
+        doCollatsTuplesMultipleThreads(10, 10);
     }
 
 
