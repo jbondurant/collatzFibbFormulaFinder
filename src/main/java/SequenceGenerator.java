@@ -2,42 +2,36 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.jar.JarEntry;
 
 public class SequenceGenerator {
 
-    public static void doCollatsTuplesMultipleThreads(int multMax, int plusMax) throws InterruptedException {
+    public static void doCollatsTuplesMultipleThreads(int multMax, int plusMax) throws Exception {
+        int numMaxThreads = 3;
         ArrayList<Integer> divMods = new ArrayList<>();
         divMods.add(3);
         divMods.add(2);
-        for (int mult = 1; mult < multMax; mult++) {
+        for (int mult = 1; mult <= multMax; mult++) {
             System.out.println("mult is " + mult);
-            for (int plus = 1; plus <= plusMax; plus += 3) {
+            CountDownLatch cdl = new CountDownLatch(multMax);
+            ExecutorService pool = Executors.newFixedThreadPool(numMaxThreads);
+
+            for (int plus = 1; plus <= plusMax; plus++) {
                 System.out.println("plus is " + plus);
-
-                Runnable r0 = new CollatzRunnerThread(divMods, mult, plus+0);
-                Runnable r1 = new CollatzRunnerThread(divMods, mult, plus+1);
-                Runnable r2 = new CollatzRunnerThread(divMods, mult, plus+2);
-
-                Thread t0 = new Thread(r0);
-                Thread t1 = new Thread(r1);
-                Thread t2 = new Thread(r2);
-
-                t0.start();
-                t1.start();
-                t2.start();
-
-                t0.join();
-                t1.join();
-                t2.join();
+                Runnable r = new CollatzRunnerThread(divMods, mult, plus, cdl);
+                pool.execute(r);
             }
+            cdl.await();
+            pool.shutdown();
         }
-
     }
 
     public static void doCollatsSpecificTuple(ArrayList<Integer> divMods, int mult, int plus){
-        int n = 10000;
-        int maxStepsWithoutHittingVisited = n*1000;
+        int n = 1000;
+        int maxStepsWithoutHittingVisited = n*100;
 
         CollatzResult cr = doCollatzWithDiffNumsUpToN(divMods, mult, plus, n, maxStepsWithoutHittingVisited);
         if (cr.equals(CollatzResult.goesToOne)) {
@@ -94,7 +88,7 @@ public class SequenceGenerator {
         return CollatzResult.goesToOne;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         //ArrayList<Integer> fib = fibonacci(100, 5);
         //strictSequenceToPairs(fib);
 
