@@ -41,55 +41,73 @@ public class SequenceGenerator {
 
     public static void doCollatsDuos(){
         int aMax = 10;
-        int bMax = 10;
-        int n = 10000;
-        int maxStepsWithoutHittingVisited = n*10000;
+        int multMax = 10;
+        int plusMax = 10;
+        int n = 1000;
+        int maxStepsWithoutHittingVisited = n*100;
+        ArrayList<Integer> divMods = new ArrayList<>();
+        divMods.add(2);
         for(int a=1; a<aMax; a++){
             System.out.println("a is " + a);
-            for(int b=1; b<bMax; b++){
-                CollatzResult cr = doCollatzWithDiffNumsUpToN(a, b, n, maxStepsWithoutHittingVisited);
-                if(cr.equals(CollatzResult.goesToOne)){
-                    System.out.println(a + "\t" + b);
+            for(int mult=1; mult<multMax; mult++){
+                System.out.println("mult is " + mult);
+                for(int plus=1; plus<plusMax; plus++) {
+                    System.out.println("plus is " + plus);
+
+                    CollatzResult cr = doCollatzWithDiffNumsUpToN(divMods, mult, plus, n, maxStepsWithoutHittingVisited);
+                    if (cr.equals(CollatzResult.goesToOne)) {
+                        System.out.println(a + "\t" + mult);
+                    }
                 }
             }
         }
     }
 
-    public static CollatzResult doCollatzWithDiffNumsUpToN(int a, int b, int n, int maxStepsWithoutHittingVisited){
+    public static ArrayList<BigInteger> getBigIntegerList(ArrayList<Integer> numbers){
+        ArrayList<BigInteger> bigInts = new ArrayList<>();
+        for(int number : numbers){
+            bigInts.add(BigInteger.valueOf(number));
+        }
+        return bigInts;
+    }
+
+    public static CollatzResult doCollatzWithDiffNumsUpToN(ArrayList<Integer> divModsInts, int mult, int plus, int n, int maxStepsWithoutHittingVisited){
         HashSet<BigInteger> numsThatGoToOne = new HashSet<>();
-        BigInteger bigA = BigInteger.valueOf(a);
-        BigInteger bigB = BigInteger.valueOf(b);
-        BigInteger big0 = BigInteger.ZERO;
-        BigInteger big1 = BigInteger.ONE;
+        ArrayList<BigInteger> divMods = getBigIntegerList(divModsInts);
+        boolean maxOneDivMod = true;
+
         int numSteps = 0;
         for(int i=1; i<n; i++){
             HashSet<BigInteger> numsVisitedCurrIVal = new HashSet<>();
             BigInteger curr = BigInteger.valueOf(i);
-            while(!curr.equals(big1)){
-                if(numsVisitedCurrIVal.size()<5000) {
+            while(!curr.equals(BigInteger.ONE)) {
+                if (numsVisitedCurrIVal.size() < 5000) {
                     numsVisitedCurrIVal.add(curr);
                 }
-                if(numSteps >= maxStepsWithoutHittingVisited){
+                if (numSteps >= maxStepsWithoutHittingVisited) {
                     return CollatzResult.divergesOrLoopTooLong;
                 }
-                if(curr.mod(bigA).equals(big0)){
-                    curr = curr.divide(bigA);
+                boolean gotDivided = false;
+                for (BigInteger divMod : divMods) {
+                    if (curr.mod(divMod).equals(BigInteger.ZERO)) {
+                        curr = curr.divide(divMod);
+                        gotDivided = true;
+                        if (maxOneDivMod) {
+                            break;
+                        }
+                    }
                 }
-                else{
-                    curr = curr.multiply(bigB).add(big1);//hardcoded
-                }
+                if (!gotDivided) {
+                    curr = curr.multiply(BigInteger.valueOf(mult)).add(BigInteger.valueOf(plus));
+                }//hardcoded
                 numSteps++;
-            }
-            if(numsThatGoToOne.size()<1000000) {
-                numsThatGoToOne.addAll(numsVisitedCurrIVal);
+                if (numsThatGoToOne.size() < 100000) {
+                    numsThatGoToOne.addAll(numsVisitedCurrIVal);
+                }
             }
         }
         return CollatzResult.goesToOne;
-
-
     }
-
-
 
     public static void main(String[] args){
         //ArrayList<Integer> fib = fibonacci(100, 5);
