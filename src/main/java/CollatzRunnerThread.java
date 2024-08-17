@@ -2,21 +2,19 @@ import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
 public class CollatzRunnerThread implements Runnable{
-    ArrayList<Integer> divMods;
-    int mult;
-    int plus;
+    SingleCollatzRunConfiguration singleCollatzRunConfiguration;
     CountDownLatch cdl;
+    int hardcodedMultiplier;
 
-    CollatzRunnerThread(ArrayList<Integer> divModsVal, int multVal, int plusVal, CountDownLatch cdlVal){
-        divMods = divModsVal;
-        mult = multVal;
-        plus = plusVal;
+    CollatzRunnerThread(int numDivMods, int mult, int plus, int n, int maxSteps, CountDownLatch cdlVal, int hm){
+        singleCollatzRunConfiguration = new SingleCollatzRunConfiguration(numDivMods, mult, plus, n, maxSteps);
         cdl = cdlVal;
+        hardcodedMultiplier = hm;
     }
 
     @Override
     public void run(){
-        SequenceGenerator.doCollatsSpecificTuple(divMods, mult, plus);
+        SequenceGenerator.doCollatsSpecificTuple(singleCollatzRunConfiguration, hardcodedMultiplier);
         cdl.countDown();
     }
 }

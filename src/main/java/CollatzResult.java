@@ -1,6 +1,6 @@
 public enum CollatzResult {
     goesToOne,
     loops,
-    divergesOrLoopTooLong,
+    doesNotConvergeWithinBoundSteps,
 
 }
